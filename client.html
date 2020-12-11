@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset = "utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+        <title>Telemetry</title>
+    </head>
+
+    <body style = "background-color: black;">
+        <h1 style = "color:crimson;" ><center>Telemetry</center></h1>
+        <div class = "col-md-4 offset-md-1">
+            <div class = "card" style="background-color: black;">
+                <div class = "card-body">
+                    <h3 style="color: crimson;">Temperature</h3>
+                </div>
+                <div class = "card-body">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div id="results" style="color:crimson;"></div>
+        <div id="CHECK" style="color:crimson;"></div>
+        <div id = "text"></div>
+        <div id  = "stream" style="color: crimson;"></div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+        <script src = "/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script>
+            var init = [0,0,0,0,0,0,0,0];
+            var lab = 32;
+            var counter = 0;
+            var point = 0;
+            var ctx = document.getElementById('myChart').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['0', '4', '8', '12', '16', '20', '24', '28'],
+                    
+                    datasets: [{
+                    label: 'Sensor1',
+                    //backgroundColor: 'rgb(0, 0, 0)',
+                    borderColor: 'rgb(255, 0, 0)',
+                    data: init
+                    }]
+                },
+                options: {
+                    legend: {
+                        labels: {
+                            fontColor: "crimson",
+                            fontSize: 18
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                fontColor: "crimson",
+                                fontSize: 14,
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "crimson",
+                                fontSize: 14,
+                            }
+                         }]
+                    }
+                }
+            });
+            function updateChart(value){
+                chart.data.labels.push(lab);
+                chart.data.datasets[0].data.push(value);
+                chart.data.datasets[0].data.swift();
+
+                lab = lab +4;
+                chart.update();
+            };
+            var socket = io.connect();
+            socket.on('welcome', function(data) {
+                document.getElementById("results").innerHTML = data.message;
+            });
+            socket.on('openport', function(data){
+
+                document.getElementById("text").innerHTML = data.message;
+            });
+            socket.on('datastreamMES', function(arg1, arg2){
+                document.getElementById("stream").innerHTML = arg1.message;
+                document.getElementById("CHECK").innerHTML = "DONE" + counter;
+                updateChart(arg2);
+                counter++; 
+            });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+    </body>
+    </html>
